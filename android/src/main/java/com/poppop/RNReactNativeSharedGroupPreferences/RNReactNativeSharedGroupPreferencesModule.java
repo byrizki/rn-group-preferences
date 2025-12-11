@@ -12,9 +12,10 @@ import android.os.Environment;
 import androidx.core.app.ActivityCompat;
 
 import com.facebook.react.bridge.ReactApplicationContext;
-import com.facebook.react.bridge.ReactContextBaseJavaModule;
+// import com.facebook.react.bridge.ReactContextBaseJavaModule; // Removed
 import com.facebook.react.bridge.ReactMethod;
-import com.facebook.react.bridge.Callback;
+// import com.facebook.react.bridge.Callback; // Removed, use Promise
+import com.facebook.react.bridge.Promise; 
 import com.facebook.react.bridge.ReadableMap;
 
 import android.content.ContentProvider;
@@ -26,7 +27,9 @@ import android.widget.Toast;
 
 
 
-public class RNReactNativeSharedGroupPreferencesModule extends ReactContextBaseJavaModule {
+public class RNReactNativeSharedGroupPreferencesModule extends NativeRNGroupPreferencesSpec {
+
+    public static final String NAME = "RNReactNativeSharedGroupPreferences";
 
   private final ReactApplicationContext reactContext;
 
@@ -41,7 +44,7 @@ public class RNReactNativeSharedGroupPreferencesModule extends ReactContextBaseJ
 
   @Override
   public String getName() {
-    return "RNReactNativeSharedGroupPreferences";
+    return NAME;
   }
 
   @ReactMethod
@@ -55,8 +58,8 @@ public class RNReactNativeSharedGroupPreferencesModule extends ReactContextBaseJ
     }
   }
 
-  @ReactMethod
-  public void setItem(String key, String value, String appGroup, ReadableMap options, final Callback callback) {
+  @Override
+  public void setItem(String key, String value, String appGroup, ReadableMap options, final Promise promise) {
     boolean useAndroidSharedPreferences = false;
     if (options.hasKey("useAndroidSharedPreferences")) {
       useAndroidSharedPreferences = options.getBoolean("useAndroidSharedPreferences");
@@ -67,22 +70,8 @@ public class RNReactNativeSharedGroupPreferencesModule extends ReactContextBaseJ
       SharedPreferences.Editor editor = preferences.edit();
       editor.putString(key, value);
       editor.apply();
-      callback.invoke(null, "");
+      promise.resolve(null);
     } else {
-      int apiVersion = android.os.Build.VERSION.SDK_INT;
-      /*
-      if (apiVersion >= 30) {
-
-        // kjellhere /////////
-        String URL = "content://" + appGroup + "/data";
-        Uri CONTENT_URI = Uri.parse(URL);
-
-        ContentValues values = new ContentValues();
-        values.put(key, value);
-        Uri uri = getContentResolver().insert(CONTENT_URI, values);
-////////////////////////
-      } else {
-        */
         File extStore = Environment.getExternalStorageDirectory();
         String fileName = "data.json";
 
@@ -96,18 +85,16 @@ public class RNReactNativeSharedGroupPreferencesModule extends ReactContextBaseJ
           myOutWriter.append(value);
           myOutWriter.close();
           fOut.close();
-          callback.invoke(null, "");
+          promise.resolve(null);
         } catch (Exception e) {
           e.printStackTrace();
-          callback.invoke(0, null);
+          promise.reject("0", e.getMessage());
         }
-        //Toast.makeText(this.reactContext, "HELLO! v" + apiVersion, Toast.LENGTH_LONG).show();
-      //}
     }
   }
 
-  @ReactMethod
-  public void getItem(String key, String appGroup, ReadableMap options, final Callback callback) {
+  @Override
+  public void getItem(String key, String appGroup, ReadableMap options, final Promise promise) {
     boolean useAndroidSharedPreferences = false;
     if (options.hasKey("useAndroidSharedPreferences")) {
       useAndroidSharedPreferences = options.getBoolean("useAndroidSharedPreferences");
@@ -116,26 +103,8 @@ public class RNReactNativeSharedGroupPreferencesModule extends ReactContextBaseJ
     if (useAndroidSharedPreferences) {
       SharedPreferences preferences = getSharedPreferences(appGroup);
       String value = preferences.getString(key, null);
-      callback.invoke(null, value);
+      promise.resolve(value);
     } else {
-      int apiVersion = android.os.Build.VERSION.SDK_INT;
-      /*
-      if (apiVersion >= 30) {
-        // kjellhere/////////
-        String URL = "content://" + appGroup + "/data";
-        Uri CONTENT_URI = Uri.parse(URL);
-        Cursor c = getContentResolver().query(CONTENT_URI, null, null, null, null);
-
-        String jsonString = "";
-        int index = c.getColumnIndex(key);
-        while (c.moveToNext()) {
-          jsonString = jsonString + c.getString(index);
-        }
-
-        Toast.makeText(this.reactContext, "HELLO!", Toast.LENGTH_LONG).show();
-//////////////
-      } else {
-        */
         File extStore = Environment.getExternalStorageDirectory();
         String fileName = "data.json";
         String path = extStore.getAbsolutePath() + "/" + appGroup + "/" + fileName;
@@ -143,7 +112,6 @@ public class RNReactNativeSharedGroupPreferencesModule extends ReactContextBaseJ
         String s = "";
         String fileContent = "";
         try {
-
            File myFile = new File(path);
            FileInputStream fIn = new FileInputStream(myFile);
            BufferedReader myReader = new BufferedReader(
@@ -153,17 +121,10 @@ public class RNReactNativeSharedGroupPreferencesModule extends ReactContextBaseJ
                fileContent += s + "";
            }
            myReader.close();
-           callback.invoke(null, fileContent);
+           promise.resolve(fileContent);
         } catch (IOException e) {
-           callback.invoke(0, null);
+           promise.reject("0", e.getMessage());
         }
-      //}
     }
   }
 }
-
-/*
-class RNReactNativeSharedGroupPreferencesProvider extends ContentProvider {
-
-}
-*/
