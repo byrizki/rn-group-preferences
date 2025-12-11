@@ -50,6 +50,12 @@
     resolve(nil);
   }
 
+  RCT_EXPORT_METHOD(isAppInstalledAndroid: (NSString *)packageName :(RCTPromiseResolveBlock)resolve :(RCTPromiseRejectBlock)reject)
+  {
+      // Not supported on iOS
+      resolve(@(NO));
+  }
+
   - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
   {

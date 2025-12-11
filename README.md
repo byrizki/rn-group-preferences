@@ -29,6 +29,27 @@ cd ios && pod install
 
 No manual linking required.
 
+### Expo Setup
+
+This package includes a [Config Plugin](https://docs.expo.dev/config-plugins/introduction/) to automate the iOS App Group entitlement setup.
+
+Ad to your `app.json` or `app.config.js`:
+
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "rn-group-preferences",
+        {
+          "appGroup": "group.com.your.app.group"
+        }
+      ]
+    ]
+  }
+}
+```
+
 **Note on AGP 8**: This library is compatible with Android Gradle Plugin 8+.
 **Note on New Architecture**: This library is designed for the New Architecture (TurboModules) and requires it to be enabled in your app.
 
@@ -46,8 +67,7 @@ _set/get basic key/value pairs_
 ## Usage
 
 ```javascript
-import SharedGroupPreferences from 'rn-group-preferences'
-";
+import SharedGroupPreferences from "rn-group-preferences";
 
 const appGroupIdentifier = "group.com.mytest";
 const userData = {
@@ -143,88 +163,46 @@ export default class app extends React.Component {
 
 In Xcode, open your Target and click the `Capabilities` tab. Go down to `App Groups`. Add a preexisting identifier or create a new one. Do the same for all the apps that you plan to have a shared container for. Use this identifier for `appGroupIdentifier` when you call the javascript functions.
 
-## Android Prep Work (incomplete)
+## Android Configuration
 
-#### External Storage (public storage, any app can access/modify)
+### External Storage Permissions
 
-You need Android Permissions for READ & WRITE External Storage. You can get permission using React Native's `PermissionsAndroid` module. How you ask for Permissions is up to you, but can be accomplished like in the example above. Android API 23+ needs you to ask for permissions within the app itself. Below 23 and you can just add these permissions your `AndroidManifest.xml` file. For all versions, you will still need to add these to your manifest. Just you will also need to ask for it in 23+.
-
-```
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-```
-
-#### External Storage _GOTCHA_
-
-Since writing this module in maybe 2018, and only testing it with SDK Version 28 and below, it has come to my attention that `Public External Storage` is deprecated in version 29. Nevertheless, if your device targets 29, you can still use external storage my modifying your `AndroidManifest.xml` file. This is a temporary work around so that all users (even those with 30+) can use this library's ability to access/write public external storage. However, I believe in August of 2021, all new apps submitted to Google Play must target SDK 30 or above to upload new builds. So for now, I am giving this temporary work around until I find a solution for SDK30+.
-
-1. Open `../android/app/src/main/AndroidManifest.xml` and add `android:requestLegacyExternalStorage="true"`
+To share data between different applications on Android, this library uses External Storage. You must request proper permissions:
 
 ```xml
-<!-- example -->
-<manifest ...>
-  <application
-    ...
-    android:requestLegacyExternalStorage="true">
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 ```
 
-2. Open `../android/build.gradle` and make sure targetSdkVersion is 29 or below. If you target 30+, the added `android:requestLegacyExternalStorage="true"` will be ignored. So public external storage will only work for 28 and below. But if you target 29, public external storage will work for all devices.
+For Android 11+ (SDK 30+), Scoped Storage rules apply. If you are targeting SDK 30+, consider using `SharedPreferences` option if data sharing between distinct apps is not required, or ensure your app has the necessary entitlements for broader storage access if needed.
 
-```gradle
-buildscript {
-    ext {
-        ...
-        targetSdkVersion = 29
-    }
-```
+**Note**: For legacy compatibility (SDK 29), you might need `android:requestLegacyExternalStorage="true"` in your `AndroidManifest.xml`.
 
-_Note_ Since public external storage is being deprecated, if you use this library, you may have to find a work around to transitioning the public storage file(s) you create using this library somewhere else. I am currently working on (as of Feb 2021) on using `Content Providers`. I am not sure if this solution will work, but I figure I can support my buggy apps for the next few months by requesting legacy external storage for now. If this solution works, I hope to create a solution where data instantly will be copied from public external storage if there is no data in the content provider, and then use content provider exclusively after that.
+## Android Storage Options
 
-#### Shared Preferences (internal app storage)
+### Shared Preferences (Internal)
 
-Some users may want to use Android `SharedPreferences` instead of Public External Storage. This has the benefit of not having to add the above Permissions prep work. For instance, if you use an extension, you may prefer this. Or maybe you add some settings that I don't know about where SharedPreferences will work for you. If this is the case, just add an optional Options object to the end of your calls like this:
+By default, this library uses External Storage to share data between apps (mimicking iOS App Groups). If you prefer to use standard Android `SharedPreferences` (e.g., for internal app use or extensions), you can pass an option:
 
 ```javascript
-try {
-  const loadedData = await SharedGroupPreferences.getItem(
-    "savedData",
-    appGroupIdentifier,
-    { useAndroidSharedPreferences: true }
-  );
-  this.setState({ username: loadedData.name });
-} catch (errorCode) {
-  console.log(errorCode);
-}
+await SharedGroupPreferences.setItem("key", "value", appGroup, {
+  useAndroidSharedPreferences: true,
+});
 ```
 
-or
+## Utilities
+
+### Check if App is Installed (Android)
+
+Check if an application is installed on the device by its package name.
 
 ```javascript
-try {
-  await SharedGroupPreferences.setItem("savedData", data, appGroupIdentifier, {
-    useAndroidSharedPreferences: true,
-  });
-  this.loadUsernameFromSharedStorage();
-} catch (errorCode) {
-  // errorCode 0 = There is no suite with that name
-  console.log(errorCode);
-}
-```
-
-Options are optional and currently only affect Android. No changes are needed to your code if you want your code to keep working as it did before updating to the current version.
-
-## Extras because I'm Lazy
-
-I've added extra functionality to this module that isn't related because it's it's a pain creating a new npm module and setting everything up.
-
-```javascript
-// This Android only script lets you check if another app is installed based on package name. The example below is for Facebook.
 const facebookPackageName = "com.facebook.android";
 try {
   const installed = await SharedGroupPreferences.isAppInstalledAndroid(
     facebookPackageName
   );
-  console.log("Facebook is installed on this device");
+  console.log("Facebook is installed");
 } catch (err) {
   console.log("Facebook is not installed");
 }

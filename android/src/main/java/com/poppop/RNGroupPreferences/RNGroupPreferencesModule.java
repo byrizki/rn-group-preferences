@@ -1,5 +1,5 @@
 
-package com.poppop.RNReactNativeSharedGroupPreferences;
+package com.poppop.RNGroupPreferences;
 
 import android.app.Activity;
 import android.content.Context;
@@ -27,13 +27,14 @@ import android.widget.Toast;
 
 
 
-public class RNReactNativeSharedGroupPreferencesModule extends NativeRNGroupPreferencesSpec {
 
-    public static final String NAME = "RNReactNativeSharedGroupPreferences";
+public class RNGroupPreferencesModule extends NativeRNGroupPreferencesSpec {
+
+    public static final String NAME = "RNGroupPreferences";
 
   private final ReactApplicationContext reactContext;
 
-  public RNReactNativeSharedGroupPreferencesModule(ReactApplicationContext reactContext) {
+  public RNGroupPreferencesModule(ReactApplicationContext reactContext) {
     super(reactContext);
     this.reactContext = reactContext;
   }
@@ -47,14 +48,14 @@ public class RNReactNativeSharedGroupPreferencesModule extends NativeRNGroupPref
     return NAME;
   }
 
-  @ReactMethod
-  public void isAppInstalledAndroid(String packageName, final Callback callback) {
+  @Override
+  public void isAppInstalledAndroid(String packageName, Promise promise) {
     PackageManager pm = reactContext.getPackageManager();
     try {
       pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
-      callback.invoke(true);
+      promise.resolve(true);
     } catch (Exception e) {
-      callback.invoke(false);
+      promise.resolve(false);
     }
   }
 

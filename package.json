@@ -1,6 +1,6 @@
 {
   "name": "rn-group-preferences",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "React Native TurboModule for accessing Shared Preferences (Android) and App Groups (iOS). Fully compatible with the New Architecture.",
   "main": "index",
   "scripts": {
@@ -26,8 +26,15 @@
   },
   "homepage": "https://github.com/byrizki/rn-group-preferences#readme",
   "codegenConfig": {
-    "name": "RNGroupPreferencesSpec",
+    "name": "NativeRNGroupPreferencesSpec",
     "type": "modules",
-    "jsSrcsDir": "src"
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.poppop.RNGroupPreferences"
+    }
+  },
+  "app.plugin": "app.plugin.js",
+  "dependencies": {
+    "@expo/config-plugins": "^54.0.3"
   }
 }

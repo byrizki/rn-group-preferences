@@ -10,12 +10,16 @@ Pod::Spec.new do |s|
   s.license      = package['license']
   s.author       = { "Muhamad Rizki" => "github: byrizki" }
   s.platform     = :ios, "11.0"
-  s.source       = { :git => "https://github.com/byrizki/rn-group-preferences.git", :branch => "master", :tag => "v#{s.version}" }
-  s.source_files = "ios/*.{h,mm}"
+  s.source       = { :git => "https://github.com/byrizki/rn-group-preferences.git", :tag => "v#{s.version}" }
+
+  s.source_files = "ios/**/*.{h,mm,cpp}"
   s.requires_arc = true
 
   s.dependency "React-Core"
-  
-  # New Architecture
+
+  # NEW ARCHITECTURE
+  s.codegen_module_name = "RNGroupPreferences"
+  s.codegen_js_spec = "src/NativeRNGroupPreferences.ts"
+
   install_modules_dependencies(s)
 end
