@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import NativeGroupPreferences from './src/NativeGroupPreferences';
+import NativeRNGroupPreferences from './src/NativeRNGroupPreferences';
 
 export default class SharedGroupPreferences {
 
@@ -15,7 +15,7 @@ export default class SharedGroupPreferences {
     // But since I'm updating index.js, I should update the Spec first if I want correctness.
     // Or I can just cast or ignore if using JS.
     // Since this is JS, I can just call it if it exists on the native module object at runtime.
-    return NativeGroupPreferences.isAppInstalledAndroid(packageName);
+    return NativeRNGroupPreferences.isAppInstalledAndroid(packageName);
   }
 
   static async getItem(key, appGroup, inputOptions) {
@@ -25,7 +25,7 @@ export default class SharedGroupPreferences {
 
     const options = inputOptions || {};
     // Native module now returns Promise
-    const item = await NativeGroupPreferences.getItem(key, appGroup, options);
+    const item = await NativeRNGroupPreferences.getItem(key, appGroup, options);
     
     if (item == null) return null;
 
@@ -55,6 +55,6 @@ export default class SharedGroupPreferences {
       _value = JSON.stringify(value);
     }
     
-    return NativeGroupPreferences.setItem(key, _value, appGroup, options);
+    return NativeRNGroupPreferences.setItem(key, _value, appGroup, options);
   }
 }
